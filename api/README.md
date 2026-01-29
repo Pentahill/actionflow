@@ -1,11 +1,11 @@
 # actionflow（公开 API）
 
-应用层应通过本包引用 ActionFlow，**不要**直接使用 `internal`。
+应用层通过本包引用 ActionFlow，**不要**直接使用 `internal`。
 
 ## 导入
 
 ```go
-import "github.com/Pentahill/actionflow/pkg/actionflow"
+import "github.com/Pentahill/actionflow/api"
 ```
 
 ## 导出类型与函数
@@ -27,4 +27,4 @@ import "github.com/Pentahill/actionflow/pkg/actionflow"
 
 ## 示例
 
-见项目根目录下 [examples/server/main.go](../../examples/server/main.go)。
+见项目根目录下 [examples/server/main.go](../examples/server/main.go)。

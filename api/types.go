@@ -35,5 +35,5 @@ type GetSessionID = async.GetSessionID
 type AgentResultCallback = async.AgentResultCallback
 
 // EventStream 事件流函数类型：传入 context，返回事件 channel 与 error。
-// 用于 ServerOptional.EventStream 及 protocol.EventStream(...) 转换。
+// 用于 ServerOptional.EventStream 及类型转换。
 type EventStream = protocol.EventStream

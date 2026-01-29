@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Pentahill/actionflow/actionflow"
+	"github.com/Pentahill/actionflow/api"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -84,7 +84,7 @@ func main() {
 	// 可选：开启 Debug 级别查看完整流水日志（handler 注册、分发、会话等）
 	// logx.SetLevel(logx.DebugLevel)
 
-	// 创建 AsyncServer（通过 pkg/actionflow 引用）
+	// 创建 AsyncServer（import "github.com/Pentahill/actionflow/api"）
 	server := actionflow.NewAsyncServer(&actionflow.ServerOptional{
 		UserRequestHandler: userRequestHandler,
 		EventStream:        actionflow.EventStream(eventStream),

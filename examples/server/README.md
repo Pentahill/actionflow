@@ -2,6 +2,14 @@
 
 这是一个使用 ActionFlow 创建异步服务器的完整示例。
 
+## 引用
+
+包在 **api** 子目录下，导入路径为：
+
+```go
+import "github.com/Pentahill/actionflow/api"
+```
+
 ## 功能说明
 
 - **EventStream**: 创建事件流，定期向客户端发送数据
