@@ -10,8 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	async "github.com/Pentahill/actionflow/internal"
-	"github.com/Pentahill/actionflow/internal/protocol"
+	"github.com/Pentahill/actionflow/actionflow"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -39,10 +38,10 @@ func eventStream(ctx context.Context) (<-chan any, error) {
 }
 
 // userRequestHandler 处理用户请求
-func userRequestHandler(ctx context.Context, req *async.UserRequest) (any, error) {
+func userRequestHandler(ctx context.Context, req *actionflow.UserRequest) (any, error) {
 	ss := req.GetSession()
 	sessionID := ss.ID()
-	
+
 	// 发送事件到客户端
 	_, err := ss.Send(ctx, map[string]interface{}{
 		"event": "invest_start",
@@ -65,12 +64,12 @@ func agentOutputHandler(ctx context.Context, payload interface{}) error {
 }
 
 // agentResultCallback 处理 Agent 的结果回调
-func agentResultCallback(ctx context.Context, response *async.AgentResponse) error {
+func agentResultCallback(ctx context.Context, response *actionflow.AgentResponse) error {
 	// 处理 Agent 的结果
 	logx.Debugf("Agent result: %v", response)
 
 	ss := response.GetSession()
-	
+
 	// 发送 Agent 结果到客户端
 	_, err := ss.Send(ctx, response.GetPayload())
 	if err != nil {
@@ -85,10 +84,10 @@ func main() {
 	// 可选：开启 Debug 级别查看完整流水日志（handler 注册、分发、会话等）
 	// logx.SetLevel(logx.DebugLevel)
 
-	// 创建 AsyncServer
-	server := async.NewAsyncServer(&async.ServerOptional{
+	// 创建 AsyncServer（通过 pkg/actionflow 引用）
+	server := actionflow.NewAsyncServer(&actionflow.ServerOptional{
 		UserRequestHandler: userRequestHandler,
-		EventStream:        protocol.EventStream(eventStream),
+		EventStream:        actionflow.EventStream(eventStream),
 		AgentOutputHandler: agentOutputHandler,
 		GetSessionID: func(req *http.Request) string {
 			// 从 URL 查询参数中获取 session_id
@@ -98,8 +97,8 @@ func main() {
 	})
 
 	// 创建 SSE Handler
-	sseHandler := async.NewSSEHandler(server)
-	
+	sseHandler := actionflow.NewSSEHandler(server)
+
 	// 设置 HTTP 路由
 	http.HandleFunc("/", sseHandler.ServeHTTP)
 
@@ -134,7 +133,7 @@ func main() {
 	// 优雅关闭
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
