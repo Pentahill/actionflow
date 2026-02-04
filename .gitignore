@@ -1,0 +1,45 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+server
+/examples/server/server
+
+# Debug / test binaries
+__debug_bin*
+
+# Go workspace
+go.work
+
+# Dependency and build
+/vendor/
+*.test
+*.out
+coverage.html
+coverage.txt
+*.cover
+*.coverprofile
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/settings.json
+.vscode/*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local / env
+.env
+.env.local
+*.local
+
+# Build output
+/dist/
+/build/
+out/

@@ -6,6 +6,23 @@
 
 公开 API 放在根目录下的 `api` 子目录，导入路径为 `github.com/Pentahill/actionflow/api`，好记且统一。
 
+## 依赖安装
+
+在项目目录下执行，将依赖加入 `go.mod` 并下载：
+
+```bash
+go get github.com/Pentahill/actionflow/api
+```
+
+**使用最新（临时）版本**：若尚未发布正式 tag 或需要先试用仓库最新代码，可拉取当前最新提交：
+
+```bash
+go get github.com/Pentahill/actionflow@latest
+```
+
+- `@latest` 会解析为仓库默认分支的最新提交（如 main 的 HEAD），对应一个 pseudo-version（如 `v0.0.0-20260129090250-7f853ad84155`），适合开发联调或临时验证。
+- 正式环境建议在 `go.mod` 中锁定具体 tag（如 `v0.1.0`）或 pseudo-version，以保证构建可复现。
+
 ## 导入方式
 
 ```go
