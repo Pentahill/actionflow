@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Pentahill/actionflow/api"
+	actionflow "github.com/Pentahill/actionflow/api"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -50,8 +51,10 @@ func userRequestHandler(ctx context.Context, req *actionflow.UserRequest) (any, 
 		logx.WithContext(ctx).Errorf("Failed to send event, session_id=%s, error=%v", sessionID, err)
 	}
 
-	// TODO: 处理请求，例如持久化数据到数据库
-	logx.WithContext(ctx).Debugf("Received client request, persisting data to database, session_id=%s, payload=%+v", sessionID, req.GetPayload())
+	// 下游可按需对 GetPayload() 做类型断言为 decoder 返回的类型
+	if payload, ok := req.GetPayload().(*UserInput); ok {
+		logx.WithContext(ctx).Debugf("Received client request, session_id=%s, id=%d, content=%s", sessionID, payload.ID, payload.Content)
+	}
 	return nil, nil
 }
 
@@ -96,8 +99,10 @@ func main() {
 		AgentResultCallback: agentResultCallback,
 	})
 
-	// 创建 SSE Handler
-	sseHandler := actionflow.NewSSEHandler(server)
+	// 创建 SSE Handler（Decoder 可按需定义返回值类型，通过包装转为 any 传入）
+	sseHandler := actionflow.NewSSEHandler(server, &actionflow.SSEHandlerOptions{
+		Decoder: func(data []byte) (any, error) { return userInputJSONDecoder(data) },
+	})
 
 	// 设置 HTTP 路由
 	http.HandleFunc("/", sseHandler.ServeHTTP)
@@ -139,4 +144,18 @@ func main() {
 	}
 
 	log.Println("Server exited")
+}
+
+// UserInput 示例：可按需定义 decoder 的请求体类型，下游从 UserRequest.GetPayload() 取出后做类型断言
+type UserInput struct {
+	ID      int    `json:"id"`
+	Content string `json:"content"`
+}
+
+func userInputJSONDecoder(data []byte) (*UserInput, error) {
+	var req UserInput
+	if err := json.Unmarshal(data, &req); err != nil {
+		return nil, err
+	}
+	return &req, nil
 }

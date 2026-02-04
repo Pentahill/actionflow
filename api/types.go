@@ -16,6 +16,10 @@ type ServerOptional = async.ServerOptional
 // SSEHandler 实现 http.Handler，提供 SSE 端点；通常挂载到 http.HandleFunc("/", handler.ServeHTTP)。
 type SSEHandler = async.SSEHandler
 
+// SSEHandlerOptions 创建 SSEHandler 时的可选配置，可自定义 transport 的 Decoder 与 Encoder。
+// Decoder/Encoder 为 nil 时使用默认 JSON 编解码。
+type SSEHandlerOptions = async.SSEHandlerOptions
+
 // UserRequest 用户请求，在 UserRequestHandler 中传入；可获取 Session 与 Payload。
 type UserRequest = async.UserRequest
 

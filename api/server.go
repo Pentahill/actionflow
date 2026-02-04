@@ -9,7 +9,8 @@ func NewAsyncServer(opt *ServerOptional) *AsyncServer {
 	return async.NewAsyncServer(opt)
 }
 
-// NewSSEHandler 创建 SSE HTTP Handler，挂载到路由即可提供 SSE 端点。
-func NewSSEHandler(server *AsyncServer) *SSEHandler {
-	return async.NewSSEHandler(server)
+// NewSSEHandlerWithOptions 使用可选配置创建 SSE HTTP Handler，可配置 transport 的 Decoder 与 Encoder。
+// opts 可为 nil；opts 中 Decoder/Encoder 为 nil 时使用默认 JSON 编解码。
+func NewSSEHandler(server *AsyncServer, opts *SSEHandlerOptions) *SSEHandler {
+	return async.NewSSEHandler(server, opts)
 }
