@@ -1,9 +1,10 @@
 package async
 
 import (
+	"net/http"
+
 	"github.com/Pentahill/actionflow/internal/biz"
 	"github.com/Pentahill/actionflow/internal/protocol"
-	"net/http"
 )
 
 // RequestHandlerFunc 请求处理函数类型别名
@@ -50,28 +51,16 @@ func (s *AsyncServer) EventStream() protocol.EventStream {
 
 // NewAsyncServer 创建新的异步服务器
 func NewAsyncServer(opt *ServerOptional) *AsyncServer {
-	server := &AsyncServer{}
-
-	// 应用可选配置
-	if opt != nil {
-		if opt.UserRequestHandler != nil {
-			server.userRequestHandler = opt.UserRequestHandler
-		}
-		if opt.EventStream != nil {
-			server.eventStream = opt.EventStream
-		}
-		if opt.AgentOutputHandler != nil {
-			server.agentOutputHandler = opt.AgentOutputHandler
-		}
-		if opt.GetSessionID != nil {
-			server.getSessionID = opt.GetSessionID
-		} else {
-			server.getSessionID = defaultGetSessionID
-		}
-		if opt.AgentResultCallback != nil {
-			server.agentResultCallback = opt.AgentResultCallback
-		}
+	if opt == nil {
+		opt = &ServerOptional{}
 	}
+
+	server := &AsyncServer{}
+	server.userRequestHandler = opt.UserRequestHandler
+	server.eventStream = opt.EventStream
+	server.agentOutputHandler = opt.AgentOutputHandler
+	server.getSessionID = opt.GetSessionID
+	server.agentResultCallback = opt.AgentResultCallback
 
 	return server
 }

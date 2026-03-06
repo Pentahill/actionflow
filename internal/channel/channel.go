@@ -215,8 +215,19 @@ func (d *Dispatcher) consume() {
 			continue
 		}
 
-		// 获取 action 的类型（使用指针类型，因为注册时使用的是指针类型）
-		actionType := reflect.TypeOf(action)
+		// 若为 ActionEnvelope，拆封并恢复上下文；否则保持原有行为（兼容历史数据）
+		handlerCtx := ctx
+		handlerAction := action
+		if envelope, ok := action.(*ActionEnvelope); ok {
+			handlerCtx = restoreContextCarrier(ctx, envelope.ContextCarrier)
+			if len(envelope.Passthrough) > 0 {
+				handlerCtx = ContextWithPassthrough(handlerCtx, envelope.Passthrough)
+			}
+			handlerAction = envelope.InnerAction
+		}
+
+		// 以 InnerAction 的类型路由，确保 handler 注册逻辑无需感知信封
+		actionType := reflect.TypeOf(handlerAction)
 
 		// 获取该 ActionType 的所有回调函数
 		d.handlersMu.RLock()
@@ -224,7 +235,7 @@ func (d *Dispatcher) consume() {
 		copy(allHandlers, d.handlers)
 		d.handlersMu.RUnlock()
 
-		sessionID := action.GetSessionID()
+		sessionID := handlerAction.GetSessionID()
 		if sessionID == "" {
 			sessionID = "<empty>"
 		}
@@ -252,15 +263,15 @@ func (d *Dispatcher) consume() {
 
 		// 如果没有匹配的 handler，记录警告
 		if len(handlers) == 0 {
-			logx.WithContext(ctx).Debugf("No handler registered for action type, action_type=%s, session_id=%s", actionType.String(), sessionID)
+			logx.WithContext(handlerCtx).Debugf("No handler registered for action type, action_type=%s, session_id=%s", actionType.String(), sessionID)
 			continue
 		}
 
-		// 逐个调用匹配的 handlers
-		logx.WithContext(ctx).Debugf("Begin to dispatch action, action_type=%s, session_id=%s, handlers=%d", actionType.String(), sessionID, len(handlers))
+		// 逐个调用匹配的 handlers，传入恢复了请求上下文的 handlerCtx 和解包后的 handlerAction
+		logx.WithContext(handlerCtx).Debugf("Begin to dispatch action, action_type=%s, session_id=%s, handlers=%d", actionType.String(), sessionID, len(handlers))
 		for _, nh := range handlers {
-			if err := nh.handler.Handle(ctx, action); err != nil {
-				logx.WithContext(ctx).Errorf("Handler error, handler_name=%s, session_id=%s, error=%v", nh.name, sessionID, err)
+			if err := nh.handler.Handle(handlerCtx, handlerAction); err != nil {
+				logx.WithContext(handlerCtx).Errorf("Handler error, handler_name=%s, session_id=%s, error=%v", nh.name, sessionID, err)
 			}
 		}
 	}
@@ -429,9 +440,10 @@ func (d *Dispatcher) IsClosed() bool {
 	return d.closed
 }
 
-// Send 发送 Action 到 Channel
-// 这是对 Channel.Send 的封装，方便使用
-// 如果 Dispatcher 已关闭，则拒绝发送新的 Action
+// Send 发送 Action 到 Channel。
+// 在发送前自动将 action 包入 ActionEnvelope，提取 ctx 中的上下文字段与透传数据，
+// 随 action 一起经由 Channel 传递至消费端。
+// 如果 Dispatcher 已关闭，则拒绝发送新的 Action。
 func (d *Dispatcher) Send(ctx context.Context, action Action) error {
 	// 检查是否已关闭
 	d.mu.RLock()
@@ -447,5 +459,5 @@ func (d *Dispatcher) Send(ctx context.Context, action Action) error {
 		return ErrDispatcherClosed
 	}
 
-	return d.channel.Send(ctx, action)
+	return d.channel.Send(ctx, WrapAction(ctx, action))
 }

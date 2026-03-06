@@ -44,6 +44,7 @@ const (
 	ActionTypeSessionClose        ActionType = "session_close"
 	ActionTypeProcessingError     ActionType = "processing_error"
 	ActionTypeAgentResultCallback ActionType = "agent_result_callback"
+	ActionTypeEnvelope            ActionType = "envelope"
 )
 
 // ActionMetadata Action 元数据，用于序列化
@@ -455,6 +456,9 @@ func UnmarshalAction(data []byte) (Action, error) {
 			action.Error = &actionError{msg: actionData.Error}
 		}
 		return action, nil
+
+	case ActionTypeEnvelope:
+		return unmarshalEnvelope(metadata.Data)
 
 	default:
 		return nil, json.Unmarshal(data, &struct{}{}) // 返回格式错误
